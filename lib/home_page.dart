@@ -4,13 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:tictactoe/dialog_box.dart';
 import 'package:tictactoe/reusable_card.dart';
 
+String mode;
+
 class HomePage extends StatefulWidget {
+//  HomePage({this.mode});
+
   @override
   _HomePageState createState() => new _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   List<ReusableCard> buttonsList;
+  String player;
   var player1;
   var player2;
   int wins = 0;
@@ -66,7 +71,9 @@ class _HomePageState extends State<HomePage> {
               context: context,
               builder: (_) => new DialogBox("It's a Draw!", restartGame));
         } else {
-          activePlayer == 2 ? autoPlay() : null;
+          if (mode == 'single') {
+            activePlayer == 2 ? autoPlay() : null;
+          }
         }
       }
     });
@@ -160,12 +167,16 @@ class _HomePageState extends State<HomePage> {
         wins++;
         showDialog(
             context: context,
-            builder: (_) => new DialogBox("You Win", restartGame));
+            builder: (_) => mode == 'single'
+                ? DialogBox("You Win", restartGame)
+                : DialogBox("Player 1 Wins", restartGame));
       } else {
         loses++;
         showDialog(
             context: context,
-            builder: (_) => new DialogBox("You Lose", restartGame));
+            builder: (_) => mode == 'single'
+                ? DialogBox("You Lose", restartGame)
+                : DialogBox("Player 2 Wins", restartGame));
       }
     }
 
@@ -181,35 +192,35 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text("Tic Tac Toe"),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Tic Tac Toe"),
       ),
-      body: new Column(
+      body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Expanded(
             flex: 2,
-            child: new GridView.builder(
+            child: GridView.builder(
               padding: const EdgeInsets.all(10.0),
-              gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
                   childAspectRatio: 1.0,
                   crossAxisSpacing: 9.0,
                   mainAxisSpacing: 9.0),
               itemCount: buttonsList.length,
-              itemBuilder: (context, i) => new SizedBox(
+              itemBuilder: (context, i) => SizedBox(
                 width: 100.0,
                 height: 100.0,
-                child: new RaisedButton(
+                child: RaisedButton(
                   padding: const EdgeInsets.all(8.0),
                   onPressed: buttonsList[i].enabled
                       ? () => playGame(buttonsList[i])
                       : null,
-                  child: new Text(
+                  child: Text(
                     buttonsList[i].text,
-                    style: new TextStyle(color: Colors.white, fontSize: 20.0),
+                    style: TextStyle(color: Colors.white, fontSize: 20.0),
                   ),
                   color: buttonsList[i].bg,
                   disabledColor: buttonsList[i].bg,
@@ -244,7 +255,7 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: <Widget>[
                       Text(
-                        'Wins',
+                        mode == 'single' ? 'Wins' : 'Player 1',
                         style: TextStyle(
                             color: Colors.grey[400],
                             fontSize: 20.0,
@@ -264,7 +275,7 @@ class _HomePageState extends State<HomePage> {
                         width: 30.0,
                       ),
                       Text(
-                        'Loses',
+                        mode == 'single' ? 'Loses' : 'Player 2',
                         style: TextStyle(
                             color: Colors.grey[400],
                             fontSize: 20.0,

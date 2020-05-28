@@ -7,6 +7,7 @@ class DialogBox extends StatelessWidget {
   final actionText;
 
   DialogBox(this.title, this.callback, [this.actionText = "Restart"]);
+
   @override
   Widget build(BuildContext context) {
     return new AlertDialog(
