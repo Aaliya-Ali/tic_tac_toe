@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tictactoe/online_start_screen.dart';
 import 'home_page.dart';
 import 'start_screen.dart';
 
@@ -12,11 +13,13 @@ class TicTacToe extends StatelessWidget {
           primaryColor: Color(0xFF0A0D21),
           scaffoldBackgroundColor: Color(0xFF0A0D21),
         ),
-//      home: HomePage(),
+        debugShowCheckedModeBanner: false,
         home: StartScreen(),
+//        home: OnlineStartScreen(),
         routes: {
-          'start_screen': (BuildContext context) => StartScreen(),
-          'offline': (BuildContext context) => HomePage(),
+          'start_screen': (context) => StartScreen(),
+          'offline': (context) => HomePage(),
+          'online': (context) => OnlineStartScreen()
         });
   }
 }

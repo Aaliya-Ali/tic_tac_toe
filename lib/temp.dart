@@ -1,4 +1,5 @@
-import 'dart:math';
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tictactoe/dialog_box.dart';
@@ -6,30 +7,12 @@ import 'package:tictactoe/reusable_card.dart';
 
 String mode;
 
-class HomePage extends StatefulWidget {
-//  HomePage({this.mode});
-  void showDialogBox(BuildContext context) {
-    showGeneralDialog(
-      context: context,
-      pageBuilder: (BuildContext context, Animation animation,
-          Animation secondaryAnimation) {
-        return Center(
-          child: Material(
-            child: Container(
-              color: Colors.black.withOpacity(animation.value),
-              child: Text("Press the restart button to start again."),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
+class OnlineGameBoard extends StatefulWidget {
   @override
-  _HomePageState createState() => new _HomePageState();
+  _OnlineGameBoardState createState() => new _OnlineGameBoardState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _OnlineGameBoardState extends State<OnlineGameBoard> {
   List<ReusableCard> buttonsList;
   String player;
   var player1;
@@ -65,119 +48,138 @@ class _HomePageState extends State<HomePage> {
     return gameButtons;
   }
 
-  void playGame(ReusableCard gb) {
+  var tile1;
+  var tile2;
+  var tile3;
+  var tile4;
+  var tile5;
+  var tile6;
+  var tile7;
+  var tile8;
+  var tile9;
+  var winner = -1;
+
+  void playGame(List<ReusableCard> gb, int i) {
     setState(() {
+      winner = -1;
       if (activePlayer == 1) {
-        gb.text = "X";
-        gb.bg = Color(0xFFEB1555);
+//        gb[i].text = "X";
+//        gb[i].bg = Color(0xFFEB1555);
         activePlayer = 2;
-        player1.add(gb.id);
+        player1.add(gb[i].id);
+        Firestore.instance
+            .collection("game_board")
+            .document("wAtsmnBWtbzHyhFdSB7g")
+            .updateData({"${gb[i].id}": 'X'});
       } else {
-        gb.text = "O";
-        gb.bg = Colors.black;
+//        gb[].text = "O";
+//        gb[i].bg = Colors.black;
         activePlayer = 1;
-        player2.add(gb.id);
+        player2.add(gb[i].id);
+        Firestore.instance
+            .collection("game_board")
+            .document("wAtsmnBWtbzHyhFdSB7g")
+            .updateData({"${gb[i].id}": 'O'});
       }
-      gb.enabled = false;
-      int winner = checkWinner();
-      if (winner == -1) {
-        if (buttonsList.every((p) => p.text != "")) {
+      gb[i].enabled = false;
+      updateUI(gb);
+
+      var win = checkWinner();
+      print(win);
+      if (win.toString() == '-1') {
+        if (buttonsList.every((p) => p.text != " ")) {
           draw++;
           showDialog(
               context: context,
               barrierDismissible: false,
               builder: (_) => new DialogBox("It's a Draw!", restartGame));
-        } else {
-          if (mode == 'single') {
-            activePlayer == 2 ? autoPlay() : null;
-          }
         }
       }
     });
   }
 
-  void autoPlay() {
-//    sleep(const Duration(seconds: 5));
-    var emptyCells = new List();
-    var list = new List.generate(9, (i) => i + 1);
-    for (var cellID in list) {
-      if (!(player1.contains(cellID) || player2.contains(cellID))) {
-        emptyCells.add(cellID);
-      }
-    }
-
-    Future.delayed(const Duration(milliseconds: 500), () {
-      var r = new Random();
-      var randIndex = r.nextInt(emptyCells.length - 1);
-      var cellID = emptyCells[randIndex];
-      int i = buttonsList.indexWhere((p) => p.id == cellID);
-      playGame(buttonsList[i]);
+  Future<int> checkWinner() async {
+    winner = -1;
+    await Firestore.instance
+        .collection("game_board")
+        .document("wAtsmnBWtbzHyhFdSB7g")
+        .get()
+        .then((value) {
+      tile1 = value['1'];
+      tile2 = value['2'];
+      tile3 = value['3'];
+      tile4 = value['4'];
+      tile5 = value['5'];
+      tile6 = value['6'];
+      tile7 = value['7'];
+      tile8 = value['8'];
+      tile9 = value['9'];
     });
-  }
-
-  int checkWinner() {
-    var winner = -1;
-    if (player1.contains(1) && player1.contains(2) && player1.contains(3)) {
+    if (tile1 == 'X' && tile2 == 'X' && tile3 == 'X') {
       winner = 1;
     }
-    if (player2.contains(1) && player2.contains(2) && player2.contains(3)) {
+    if (tile1 == 'O' && tile2 == 'O' && tile3 == 'O') {
       winner = 2;
     }
 
     // row 2
-    if (player1.contains(4) && player1.contains(5) && player1.contains(6)) {
+    if (tile4 == 'X' && tile5 == 'X' && tile6 == 'X') {
       winner = 1;
     }
-    if (player2.contains(4) && player2.contains(5) && player2.contains(6)) {
+    if (tile4 == 'O' && tile5 == 'O' && tile6 == 'O') {
       winner = 2;
     }
 
     // row 3
-    if (player1.contains(7) && player1.contains(8) && player1.contains(9)) {
+    if (tile7 == 'X' && tile8 == 'X' && tile9 == 'X') {
       winner = 1;
     }
-    if (player2.contains(7) && player2.contains(8) && player2.contains(9)) {
+    if (tile7 == 'O' && tile8 == 'O' && tile9 == 'O') {
       winner = 2;
     }
 
     // col 1
-    if (player1.contains(1) && player1.contains(4) && player1.contains(7)) {
+    if (tile1 == 'X' && tile4 == 'X' && tile7 == 'X') {
       winner = 1;
     }
-    if (player2.contains(1) && player2.contains(4) && player2.contains(7)) {
+    if (tile1 == 'O' && tile4 == 'O' && tile7 == 'O') {
       winner = 2;
     }
 
     // col 2
-    if (player1.contains(2) && player1.contains(5) && player1.contains(8)) {
+    if (tile2 == 'X' && tile5 == 'X' && tile8 == 'X') {
       winner = 1;
     }
-    if (player2.contains(2) && player2.contains(5) && player2.contains(8)) {
+    if (tile2 == 'O' && tile5 == 'O' && tile8 == 'O') {
       winner = 2;
     }
 
     // col 3
-    if (player1.contains(3) && player1.contains(6) && player1.contains(9)) {
+    if (tile3 == 'X1' && tile6 == 'X' && tile9 == 'X') {
       winner = 1;
     }
-    if (player2.contains(3) && player2.contains(6) && player2.contains(9)) {
+    if (tile3 == 'O' && tile6 == 'O' && tile9 == 'O') {
       winner = 2;
     }
 
     //diagonal
-    if (player1.contains(1) && player1.contains(5) && player1.contains(9)) {
+    if (tile1 == 'X' && tile5 == 'X' && tile9 == 'X') {
       winner = 1;
     }
-    if (player2.contains(1) && player2.contains(5) && player2.contains(9)) {
+    if (tile1 == 'O' && tile5 == 'O' && tile9 == 'O') {
       winner = 2;
     }
 
-    if (player1.contains(3) && player1.contains(5) && player1.contains(7)) {
+    if (tile3 == 'X' && tile5 == 'X' && tile7 == 'X') {
       winner = 1;
     }
-    if (player2.contains(3) && player2.contains(5) && player2.contains(7)) {
+    if (tile3 == 'O' && tile5 == 'O' && tile7 == 'O') {
       winner = 2;
     }
+    Firestore.instance
+        .collection("match_data")
+        .document("xgZELxFiVFiXaLaOpwip")
+        .updateData({"winner": '$winner'});
 
     if (winner != -1) {
       if (winner == 1) {
@@ -185,28 +187,51 @@ class _HomePageState extends State<HomePage> {
         showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (_) => mode == 'single'
-                ? DialogBox('You Win', restartGame)
-                : DialogBox("Player 1 Wins", restartGame));
+            builder: (_) => DialogBox("Player 1 Wins", restartGame));
       } else {
         loses++;
         showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (_) => mode == 'single'
-                ? DialogBox("You Lose", restartGame)
-                : DialogBox("Player 2 Wins", restartGame));
+            builder: (_) => DialogBox("Player 2 Wins", restartGame));
       }
     }
-
     return winner;
+  }
+
+  void updateUI(List<ReusableCard> buttonList) {
+    for (var button in buttonList) {
+      Firestore.instance
+          .collection('game_board')
+          .document('wAtsmnBWtbzHyhFdSB7g')
+          .get()
+          .then((value) {
+        button.text = value['${button.id}'];
+        if (button.text == 'X') {
+          button.bg = Color(0xFFEB1555);
+        } else if (button.text == 'O') {
+          button.bg = Colors.black;
+        }
+      });
+    }
   }
 
   void restartGame() {
     if (Navigator.canPop(context)) Navigator.pop(context);
     setState(() {
       buttonsList = doInit();
+      winner = -1;
+      Firestore.instance
+          .collection("match_data")
+          .document("xgZELxFiVFiXaLaOpwip")
+          .updateData({"winner": '$winner'});
     });
+    for (int i = 1; i < 10; i++) {
+      Firestore.instance
+          .collection("game_board")
+          .document("wAtsmnBWtbzHyhFdSB7g")
+          .updateData({"$i": ' '});
+    }
   }
 
   @override
@@ -232,10 +257,16 @@ class _HomePageState extends State<HomePage> {
               itemBuilder: (context, i) => SizedBox(
                 width: 100.0,
                 height: 100.0,
+//                child: StreamBuilder<QuerySnapshot>(
+//                    stream:
+//                        Firestore.instance.collection('game_board').snapshots(),
+//                    builder: (context, snapshot) {
+//                      var temp = snapshot.data.documents;
+//                      print(temp[i].data);
                 child: RaisedButton(
                   padding: const EdgeInsets.all(8.0),
                   onPressed: buttonsList[i].enabled
-                      ? () => playGame(buttonsList[i])
+                      ? () => playGame(buttonsList, i)
                       : null,
                   child: Text(
                     buttonsList[i].text,

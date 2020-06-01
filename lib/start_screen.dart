@@ -43,6 +43,7 @@ class StartScreen extends StatelessWidget {
               onPressed: () {
                 mode:
                 'online';
+                Navigator.pushNamed(context, 'online');
                 print('Pressed Play Online');
               },
               child: Padding(
